@@ -1,4 +1,4 @@
-package puzzles.day05
+package puzzles.day05.part1
 
 import utils.ResourceUtils
 
@@ -14,7 +14,6 @@ enum class MapType {
 }
 
 typealias Seeds = List<Long>
-
 
 data class Map(val mapType: MapType, val mapRanges: List<MapRange>) {
     
