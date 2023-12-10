@@ -21,12 +21,12 @@ data class Schematic(val schematicStringList: List<String>) {
         val numberOrSymbolRegex = Regex("[^\\w.]+|\\d+")
 
         return numberOrSymbolRegex.findAll(input).map { matchResult ->
-                val value = matchResult.value
-                val startPos = matchResult.range.first
-                if (value[0].isDigit()) // TODO: Fix this, it's hackish
-                    SchematicNumber(value.toInt(), value.length, row, startPos)
-                else SchematicSymbol(value[0], row, startPos)
-            }.toList()
+            val value = matchResult.value
+            val startPos = matchResult.range.first
+            if (value[0].isDigit()) // TODO: Fix this, it's hackish
+                SchematicNumber(value.toInt(), value.length, row, startPos)
+            else SchematicSymbol(value[0], row, startPos)
+        }.toList()
     }
 
     fun findParts(): List<SchematicNumber> {
@@ -41,27 +41,57 @@ data class Schematic(val schematicStringList: List<String>) {
             }
         }.flatten().distinct()
     }
+
+    fun findGears(): List<Pair<SchematicNumber, SchematicNumber>> {
+        val numbers: List<SchematicNumber> = schematicRows.flatten().filterIsInstance<SchematicNumber>()
+        val symbols: List<SchematicSymbol> =
+            schematicRows.flatten().filterIsInstance<SchematicSymbol>().filter { it.value == '*' }
+
+        return symbols.map { s ->
+            numbers.filter { n ->
+                (s.row in IntRange(n.row - 1, n.row + 1)) && (s.column in IntRange(n.column - 1, n.column + n.length))
+            }
+        }
+            .filter { it.size == 2 }
+            .map { schematicNumbers ->
+                schematicNumbers[0] to schematicNumbers[1]
+            }
+    }
+
 }
 
 fun main(args: Array<String>) {
-    fun sample() {
-        println("SAMPLE")
-        val sampleSchematicStringList = ResourceUtils.getResourceAsText("/day03/sampleInput.txt").orEmpty().split("\n")
-        val schematic = Schematic(sampleSchematicStringList)
-        println("Sum: " + schematic.findParts().sumOf {
-                it.number
-            })
-    }
 
     fun part1() {
+        println("PART 1 - SAMPLE")
+        val sampleSchematicStringList = ResourceUtils.getResourceAsText("/day03/sampleInput.txt").orEmpty().split("\n")
+        val sampleSchematic = Schematic(sampleSchematicStringList)
+        println("Sum: " + sampleSchematic.findParts().sumOf {
+            it.number
+        })
+
         println("\nPART 1")
         val schematicStringList = ResourceUtils.getResourceAsText("/day03/input.txt").orEmpty().split("\n")
         val schematic = Schematic(schematicStringList)
         println("Sum: " + schematic.findParts().sumOf {
-                it.number
-            })
+            it.number
+        })
     }
 
-    sample()
+    fun part2() {
+        println("\nPART 2 - SAMPLE")
+        val sampleSchematicStringList = ResourceUtils.getResourceAsText("/day03/sampleInput.txt").orEmpty().split("\n")
+        val sampleSchematic = Schematic(sampleSchematicStringList)
+        val sampleSum = sampleSchematic.findGears().sumOf { it.first.number * it.second.number }
+        println("Sum: " + sampleSum)
+
+        println("\nPART 2")
+        val schematicStringList = ResourceUtils.getResourceAsText("/day03/input.txt").orEmpty().split("\n")
+        val schematic = Schematic(schematicStringList)
+        val sum = schematic.findGears().sumOf { it.first.number * it.second.number }
+        println("Sum: " + sum)
+    }
+
     part1()
+    part2()
 }
