@@ -13,12 +13,12 @@ enum class MapType {
     HumidityToLocations
 }
 
-typealias Seeds = List<Int>
+typealias Seeds = List<Long>
 
 
 data class Map(val mapType: MapType, val mapRanges: List<MapRange>) {
     
-    fun findDestinationMapRange(number: Int): Int {
+    fun findDestinationMapRange(number: Long): Long {
         val destinationMapRange = mapRanges.find {
             number in (it.sourceRangeStart..it.sourceRangeStart + it.rangeLength -1)
         }
@@ -27,9 +27,8 @@ data class Map(val mapType: MapType, val mapRanges: List<MapRange>) {
             else -> destinationMapRange.destinationRangeStart + (number - destinationMapRange.sourceRangeStart)
         }
     }
-    
 }
-data class MapRange(val destinationRangeStart: Int, val sourceRangeStart: Int, val rangeLength: Int)
+data class MapRange(val destinationRangeStart: Long, val sourceRangeStart: Long, val rangeLength: Long)
 
 data class Almanac(val input: String) {
     val seeds: Seeds
@@ -37,7 +36,7 @@ data class Almanac(val input: String) {
     
     init {
         val inputLines = input.split("\n\n").map { it.lines() }
-        seeds = inputLines[0][0].split("seeds: ").last().split(" ").map { it.toInt() }
+        seeds = inputLines[0][0].split("seeds: ").last().split(" ").map { it.toLong() }
         
         mapRanges = inputLines.drop(1).map { 
             val mapName = it.take(1).joinToString("")
@@ -46,27 +45,19 @@ data class Almanac(val input: String) {
             it.map {
                 val name = it.first
                 val ranges = it.second.map {
-                    val (dest, src, len) = it.split(" " ).map { it.toInt() }
+                    val (dest, src, len) = it.split(" " ).map { it.toLong() }
                     MapRange(dest, src, len)
                 }
                 Map(mapNameStrToMapNameEnum(it.first), ranges)
             }
         }
     }
-    
-    fun findLocations(): List<Int> {
+
+    fun findLocations(): List<Long> {
         return seeds.map { seed ->
-            // Bit lazy - just want to quickly see it works
-            val soil = mapRanges[0].findDestinationMapRange(seed)
-            val fertilizer = mapRanges[1].findDestinationMapRange(soil)
-            val water = mapRanges[2].findDestinationMapRange(fertilizer)
-            val light = mapRanges[3].findDestinationMapRange(water)
-            val temperature = mapRanges[4].findDestinationMapRange(light)
-            val humidity = mapRanges[5].findDestinationMapRange(temperature)
-            val location = mapRanges[6].findDestinationMapRange(humidity)
-            //print("Seed: " + seed + " Soil: " + soil + " Fertilizer: " + fertilizer + " Water: " + water + " Light: " + light + "Temperature: " + temperature)
-            //print(" Humidity: " + humidity + " Location: " + location + "\n")
-            location
+            mapRanges.fold(seed) { acc, map ->
+                map.findDestinationMapRange(acc)
+            }
         }
     }
     
@@ -94,6 +85,10 @@ fun main(args: Array<String>) {
 
         println("Lowest location: " + sampleAlmanac.findLocations().min())
 
+
+        val input = ResourceUtils.getResourceAsText("/day05/input.txt").orEmpty()
+        val almanac = Almanac(input)
+        println("Lowest location: " + almanac.findLocations().min())
     }
     
     part1()
