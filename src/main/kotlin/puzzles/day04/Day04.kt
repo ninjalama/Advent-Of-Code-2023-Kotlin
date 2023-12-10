@@ -12,7 +12,7 @@ data class ScratchCard(val line: String) {
         val (cardIdStr, cardSetStr) = line.split(":")
         val (winningNumbersStr, cardNumbersStr) = cardSetStr.split("|")
 
-        cardId = cardIdStr.substring("Card ".length).toInt()
+        cardId = cardIdStr.replace(" ", "").substring("Card".length).toInt()
         winningNumbers = winningNumbersStr.trim().replace("  ", " ").split(" ").map { it.toInt() }.toIntArray()
         cardNumbers = cardNumbersStr.trim().replace("  "," ").split(" ").map { it.toInt() }.toIntArray()
     }
@@ -40,7 +40,17 @@ fun main(args: Array<String>) {
     fun part1() {
         println("PART 1 - SAMPLE")
         val sampleStringList: List<String> = ResourceUtils.getResourceAsText("/day04/sampleInput.txt").orEmpty().split("\n")
-        val scratchCards = sampleStringList.map(::ScratchCard)
+        val sampleScratchCards = sampleStringList.map(::ScratchCard)
+
+        val samplePointsSum = sampleScratchCards.sumOf { scratchCard ->
+            ScratchCard.getPoints(scratchCard.getWinningNumbers().count())
+        }
+        println("Part 1 - Sample sum: " + samplePointsSum)
+
+
+        println("PART 1")
+        val stringList: List<String> = ResourceUtils.getResourceAsText("/day04/input.txt").orEmpty().split("\n")
+        val scratchCards = stringList.map(::ScratchCard)
 
         val pointsSum = scratchCards.sumOf { scratchCard ->
             ScratchCard.getPoints(scratchCard.getWinningNumbers().count())
