@@ -1,25 +1,18 @@
-package puzzles.day11.part2
+package puzzles.day11
 
 import utils.ResourceUtils
 
 fun List<ImageObject.Galaxy>.getShortestDistancesSum(): Long {
-    val galaxyPairs = this.flatMapIndexed { idx, galaxyA ->
+    return this.flatMapIndexed { idx, galaxyA ->
         this.takeLast(this.size - (idx+1)).map { galaxyB ->
             galaxyA to galaxyB
         }
-    }
+    }.map {
+        val xAxisDiff = kotlin.math.abs(it.first.position.xSum() - it.second.position.xSum())
+        val yAxisDiff = kotlin.math.abs(it.first.position.ySum() - it.second.position.ySum())
 
-    val galaxyPairToDistance: List<Pair<Pair<ImageObject.Galaxy, ImageObject.Galaxy>, Long>> = galaxyPairs.map {
-        val galaxyA = it.first
-        val galaxyB = it.second
-
-        val diffInXaxis =  kotlin.math.abs(galaxyA.position.xSum() - galaxyB.position.xSum())
-        val diffInYAxis = kotlin.math.abs(galaxyA.position.ySum() - galaxyB.position.ySum())
-
-        it to diffInXaxis + diffInYAxis
-    }
-
-    return galaxyPairToDistance.sumOf { it.second }
+        xAxisDiff + yAxisDiff
+    }.sum()
 }
 
 data class Position(val originalX: Long, val originalY: Long, val xIncreasedBy: Long = 0, val yIncreasedBy: Long = 0) {
@@ -39,7 +32,6 @@ sealed class ImageObject {
 }
 
 class Image(val image: List<List<ImageObject>>) {
-    
     companion object {
         fun fromInputString(inputString: String): Image {
             var galaxyCounter = 1
@@ -50,7 +42,7 @@ class Image(val image: List<List<ImageObject>>) {
                             ImageObject.Galaxy(Position(idxX.toLong(), idxY.toLong()), galaxyCounter++)   
                         }
                         else -> ImageObject.EmptySpace
-                    } 
+                    }
                 }
             }
             return Image(imageObjList)
@@ -78,23 +70,22 @@ class Image(val image: List<List<ImageObject>>) {
         
         rowIndexesWithNoGalaxy.forEachIndexed { iterationIdx, rowIndex ->
             galaxies.indices.forEach { idx ->
-                //println("Checking if galaxy: " + galaxy + " with pos: " + galaxy.position + " has originalY > " + rowIndex)
                 if (galaxies[idx].position.originalY > rowIndex) {
                     val pos = galaxies[idx].position
-                    galaxies[idx] = galaxies[idx].copy(position = Position(pos.originalX, pos.originalY, pos.xIncreasedBy, pos.yIncreasedBy + increment - 1))
+                    galaxies[idx] = galaxies[idx].copy(position = pos.copy(yIncreasedBy = pos.yIncreasedBy + increment - 1))
                 }
             }
         }
         
         columnIndexesWithNoGalaxy.forEachIndexed { iterationIdx, columnIndex ->
             galaxies.indices.forEach { idx ->
-                //println("Checking if galaxy: " + galaxy + " with pos: " + galaxy.position + " has originalX > " + columnIndex)
                 if (galaxies[idx].position.originalX > columnIndex) {
                     val pos = galaxies[idx].position
-                    galaxies[idx] = galaxies[idx].copy(position = Position(pos.originalX, pos.originalY, pos.xIncreasedBy + increment - 1, pos.yIncreasedBy))
+                    galaxies[idx] = galaxies[idx].copy(position = pos.copy(xIncreasedBy = pos.xIncreasedBy + increment - 1))
                 }
             }
         }
+
         return galaxies.toList()
     }
 }
